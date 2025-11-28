@@ -12,15 +12,15 @@ class Zombye {
         // Intercept password submission early for redirect
         add_action('template_redirect', [$this, 'maybe_handle_password_submit']);
 
-        // Disable WP registration form (soft method)
-        add_action('login_form_register', function() {
-            wp_redirect(home_url('/registration/')); // page avec le shortcode Zombye
-            exit;
-        });
+        // Redirect default WP register link
+        add_action('login_form_register', [$this, 'maybe_login_form_register']);
     }
 
     // Display the registration form or password form
     public function render_registration_form() {
+        // Save the current page as registration page if needed
+        $this->set_registration_page();
+
         $output = '';
 
         // Step 2: display password form if token present
@@ -85,8 +85,8 @@ class Zombye {
         // Password setup form
         $output .= '
         <form method="POST">
-            <label>Choose your password: <input type="password" name="zombye_password" required></label><br>
-            <label>Confirm password: <input type="password" name="zombye_password_confirm" required></label><br>
+            <label>Choose your password: <input type="password" name="password" required></label><br>
+            <label>Confirm password: <input type="password" name="password_confirmation" required></label><br>
             <button type="submit">Set password</button>
         </form>';
 
@@ -95,7 +95,7 @@ class Zombye {
 
     // Handle password submission early to allow redirect
     public function maybe_handle_password_submit() {
-        if (!isset($_GET['zombye_token'], $_POST['zombye_password'], $_POST['zombye_password_confirm'])) {
+        if (!isset($_GET['zombye_token'], $_POST['password'], $_POST['password_confirmation'])) {
             return;
         }
 
@@ -103,10 +103,10 @@ class Zombye {
         $email = get_transient('zombye_' . $token);
         if (!$email) return;
 
-        $password = $_POST['zombye_password'];
-        $password_confirm = $_POST['zombye_password_confirm'];
+        $password = $_POST['password'];
+        $password_confirmation = $_POST['password_confirmation'];
 
-        if ($password !== $password_confirm) {
+        if ($password !== $password_confirmation) {
             // Redirect back to the same page with error query
             $redirect_url = add_query_arg('zombye_error', 'mismatch', get_permalink());
             $redirect_url = add_query_arg('zombye_token', $token, $redirect_url);
@@ -132,6 +132,39 @@ class Zombye {
             : get_edit_user_link($user_id);
 
         wp_redirect($profile_url);
+        exit;
+    }
+
+    // Save the current page as the Zombye registration page if needed
+    private function set_registration_page() {
+        $current_page_id = get_the_ID();
+        if (!$current_page_id) return;
+
+        // Récupère toutes les options zombye
+        $opts = get_option('zombye', []);
+
+        // Si la page enregistrée existe et contient toujours le shortcode, rien à faire
+        if (!empty($opts['registration_page'])) {
+            $stored_content = get_post_field('post_content', $opts['registration_page']);
+            if ($stored_content && has_shortcode($stored_content, 'zombye_register')) {
+                return;
+            }
+        }
+
+        // Sauvegarde la page courante dans le tableau zombye
+        $opts['registration_page'] = $current_page_id;
+        update_option('zombye', $opts);
+    }
+
+    // Redirect WP default register link to Zombye page
+    public function maybe_login_form_register() {
+        $opts = get_option('zombye', []);
+        if (empty($opts['registration_page'])) return;
+
+        $content = get_post_field('post_content', $opts['registration_page']);
+        if (!$content || !has_shortcode($content, 'zombye_register')) return;
+
+        wp_redirect(get_permalink($opts['registration_page']));
         exit;
     }
 }

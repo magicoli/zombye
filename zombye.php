@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:     Zomby
+ * Plugin Name:     Zombye
  * Plugin URI:      https://github.com/magicoli/zombye
  * Description:     Say goodbye to zombie registrations
  * Author:          Magiiic
@@ -13,3 +13,8 @@
  */
 
 // Your code starts here.
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+require_once plugin_dir_path(__FILE__) . 'classes/class-zombye.php';
+
+$zombye = new Zombye();

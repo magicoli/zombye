@@ -47,12 +47,9 @@ class Zombye {
 
     // Handle email submission (step 1)
     private function handle_form_submission($email) {
-        if (email_exists($email)) {
-            return '<p>This email is already registered. Please use another email or log in.</p>';
-        }
-
-        if (!is_email($email)) {
-            return '<p>Invalid email address.</p>';
+        if (!is_email($email) || email_exists($email)) {
+            // Generic error message to prevent revealing valid emails
+            return '<p>There was a problem processing your registration. Please try again later.</p>';
         }
 
         $token = wp_generate_password(20, false);
@@ -82,7 +79,7 @@ class Zombye {
             $output .= '<p>Passwords do not match. Please try again.</p>';
         }
 
-        // Password setup form
+        // Password setup form with standard names
         $output .= '
         <form method="POST">
             <label>Choose your password: <input type="password" name="password" required></label><br>
@@ -104,9 +101,9 @@ class Zombye {
         if (!$email) return;
 
         $password = $_POST['password'];
-        $password_confirmation = $_POST['password_confirmation'];
+        $password_confirm = $_POST['password_confirmation'];
 
-        if ($password !== $password_confirmation) {
+        if ($password !== $password_confirm) {
             // Redirect back to the same page with error query
             $redirect_url = add_query_arg('zombye_error', 'mismatch', get_permalink());
             $redirect_url = add_query_arg('zombye_token', $token, $redirect_url);
@@ -140,10 +137,10 @@ class Zombye {
         $current_page_id = get_the_ID();
         if (!$current_page_id) return;
 
-        // Récupère toutes les options zombye
+        // Retrieve all zombye options
         $opts = get_option('zombye', []);
 
-        // Si la page enregistrée existe et contient toujours le shortcode, rien à faire
+        // If the registration page exists and still contains the shortcode, do nothing
         if (!empty($opts['registration_page'])) {
             $stored_content = get_post_field('post_content', $opts['registration_page']);
             if ($stored_content && has_shortcode($stored_content, 'zombye_register')) {
@@ -151,7 +148,7 @@ class Zombye {
             }
         }
 
-        // Sauvegarde la page courante dans le tableau zombye
+        // Save current page in zombye options array
         $opts['registration_page'] = $current_page_id;
         update_option('zombye', $opts);
     }

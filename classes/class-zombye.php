@@ -1,4 +1,6 @@
 <?php
+namespace Magicoli\Zombye;
+
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Zombye {

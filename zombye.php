@@ -12,9 +12,12 @@
  * @package         Zombye
  */
 
-// Your code starts here.
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-require_once plugin_dir_path(__FILE__) . 'classes/class-zombye.php';
+// Load the autoloader
+require_once plugin_dir_path(__FILE__) . 'autoload.php';
 
+use Magicoli\Zombye\Zombye;
+
+// Initialize Zombye
 $zombye = new Zombye();

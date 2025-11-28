@@ -4,7 +4,7 @@
  */
 
 spl_autoload_register(function($class) {
-    $prefix = 'Magicoli\\Zombye\\';
+    $prefix = 'Zombye\\';
     $base_dir = __DIR__ . '/classes/';
 
     $len = strlen($prefix);

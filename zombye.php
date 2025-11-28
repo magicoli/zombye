@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // Load the autoloader
 require_once plugin_dir_path(__FILE__) . 'autoload.php';
 
-use Magicoli\Zombye\Zombye;
+use Zombye\Zombye;
 
 // Initialize Zombye
 $zombye = new Zombye();

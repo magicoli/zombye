@@ -5,7 +5,7 @@ Tags: registration, spam, bots, users
 Requires at least: 6.0
 Tested up to: 6.8.3
 Requires PHP: 8.0
-Stable tag: 0.1.0
+Stable tag: 0.9.0
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -14,58 +14,71 @@ Say goodbye to zombie registrations.
 == Description ==
 
 Zombye is a lightweight plugin that prevents “zombie” registrations by verifying email addresses
-before creating WordPress user accounts. It is designed to reduce spam registrations, fake accounts,
-and the unwanted notifications they generate.
+before creating WordPress user accounts. It reduces spam signups, fake accounts, and the unwanted
+notifications they generate — without adding complexity or heavy UI layers.
 
-For now, Zombye provides:
+**Current features include:**
 
-* A simple registration shortcode ([zombye_register]) that displays an email input form.
-* Temporary tokens sent via email to confirm registrations before creating a user.
-* Automatic account creation only after the user clicks the confirmation link.
-* Lightweight and easy to integrate as a library within other plugins.
+* A simple registration shortcode (`[zombye_register]`) providing a clean, email-based registration flow.
+* Email verification through a secure, time-limited token.
+* User creation only after the password is set via the confirmation link.
+* Automatic login after successful password submission.
+* Redirection to the user profile page (compatible with w4os profile URLs if present).
+* Automatic detection of the page containing the registration shortcode.
+* Seamless override of the default WordPress “Register” link.
+* Unified frontend notice system with customizable CSS.
+* Fully translation-ready strings.
+* A single `zombye` option array to keep configuration clean and efficient.
 
-Future ideas and improvements include:
+Zombye is intentionally minimal: lightweight, fast, and easy to integrate as a library
+within other plugins.
 
-* Adding optional username/pseudonym fields.
-* Integrating lightweight CAPTCHA or math challenge to further reduce bots.
-* Customizable email templates (HTML, styling, branding).
-* Duplicate email / disposable email detection.
-* Integration with other plugins (e.g., membership, avatars) for seamless workflow.
-* Logging and admin dashboard for pending confirmations and statistics.
+**Potential future enhancements:**
 
-Zombye is free, open-source, and aims to stay minimal and performant while protecting your site from unwanted accounts.
+* Optional username/pseudonym fields.
+* Lightweight bot challenges (e.g., simple math).
+* Customizable HTML email templates.
+* Detection of disposable/temporary email domains.
+* Optional admin tools: pending confirmations, logs, cleanup tools.
+* Deeper integration with other membership/profile plugins.
+
+Zombye is free, open-source, and built to stay focused and performant.
 
 == Installation ==
 
-1. Upload `zombye` folder to the `/wp-content/plugins/` directory.
-1. Activate the plugin through the 'Plugins' menu in WordPress.
-1. Add the shortcode `[zombye_register]` to any page where you want the registration form to appear.
+1. Upload the `zombye` folder to `/wp-content/plugins/`.
+2. Activate the plugin through “Plugins” in WordPress.
+3. Create a page and add the shortcode `[zombye_register]`.
+4. That's it — the plugin automatically handles the rest.
 
 == Frequently Asked Questions ==
 
-= How does Zombye prevent fake accounts? =
+= How does Zombye reduce fake accounts? =
 
-It only creates WordPress accounts after the user confirms their email. This prevents spam and “zombie” users from being added to your database.
+It only creates WordPress user accounts after the owner of the email confirms it and sets a password.
+Bots and fake addresses never reach the user database.
 
 = Can I customize the email content? =
 
-Currently, Zombye sends a plain text confirmation email. Custom templates are planned for future versions.
+For now, Zombye sends a simple plain-text email. HTML templates and customization options may be added
+in future versions.
 
-= Will it work with my existing user system? =
+= Will this break my existing login or membership system? =
 
-Yes, Zombye can be used as a library within other plugins. It is lightweight and does not interfere with other user management features.
+No. Zombye is lightweight and designed to coexist with other plugins. It can also be used as a
+library embedded inside another project.
 
 == Screenshots ==
 
-1. Example of the registration form using the [zombye_register] shortcode.
-2. Email confirmation message sent to the user.
+1. Registration form using the `[zombye_register]` shortcode.
+2. Example confirmation email.
 
 == Changelog ==
 
-= 0.1.0 =
-* Initial release: email verification before user creation, simple shortcode form.
+= 0.9.0 =
+* First functional release: complete email verification workflow, password setup, autologin, profile redirection, shortcode detection, and default “Register” override.
 
 == Upgrade Notice ==
 
-= 0.1.0 =
-First release of Zombye. No upgrade required.
+= 0.9.0 =
+Initial functional release.

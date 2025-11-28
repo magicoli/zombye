@@ -57,11 +57,14 @@ class Zombye {
         }
 
         // Default email registration form
-        $output .= '
-        <form method="POST">
-            <label>' . esc_html__('Email:', 'zombye') . ' <input type="email" name="zombye_email" required></label>
-            <button type="submit">' . esc_html__('Register', 'zombye') . '</button>
-        </form>';
+        $output = sprintf(
+        	'<form method="POST">
+         		<p><label>%s<input type="email" name="zombye_email" required></label></p>
+		        <p><button type="submit">%s</button></p>
+	        </form>',
+			esc_html__('Email:', 'zombye'),
+			esc_html__('Register', 'zombye')
+		);
 
         return $output;
     }
@@ -92,12 +95,16 @@ class Zombye {
         $email = get_transient('zombye_' . $token);
         if (!$email) return '';
 
-        return '
-        <form method="POST">
-            <label>' . esc_html__('Choose your password:', 'zombye') . ' <input type="password" name="password" required></label><br>
-            <label>' . esc_html__('Confirm password:', 'zombye') . ' <input type="password" name="password_confirm" required></label><br>
-            <button type="submit">' . esc_html__('Set password', 'zombye') . '</button>
-        </form>';
+        return sprintf(
+	        '<form method="POST">
+	            <p><label>%s <input type="password" name="password" required></label></p>
+	            <p><label>%s <input type="password" name="password_confirm" required></label></p>
+	            <p><button type="submit">%s</button></p>
+	        </form>',
+			esc_html__('Choose your password:', 'zombye'),
+			esc_html__('Confirm password:', 'zombye'),
+			esc_html__('Set password', 'zombye')
+        );
     }
 
     // Provide message for password errors

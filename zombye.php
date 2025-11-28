@@ -7,7 +7,7 @@
  * Author URI:      https://magiiic.com
  * Text Domain:     zombye
  * Domain Path:     /languages
- * Version:         0.1.0
+ * Version:         0.9.0
  *
  * @package         Zombye
  */

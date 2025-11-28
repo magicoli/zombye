@@ -11,6 +11,12 @@ class Zombye {
 
         // Intercept password submission early for redirect
         add_action('template_redirect', [$this, 'maybe_handle_password_submit']);
+
+        // Disable WP registration form (soft method)
+        add_action('login_form_register', function() {
+            wp_redirect(home_url('/registration/')); // page avec le shortcode Zombye
+            exit;
+        });
     }
 
     // Display the registration form or password form

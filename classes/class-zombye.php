@@ -14,32 +14,53 @@ class Zombye {
 
         // Redirect default WP register link
         add_action('login_form_register', [$this, 'maybe_login_form_register']);
+
+        // Enqueue frontend styles
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_styles']);
+    }
+
+    public function enqueue_styles() {
+        wp_enqueue_style(
+            'zombye-style',
+            plugin_dir_url(__DIR__) . 'css/style.css',
+            [],
+            '1.0.0'
+        );
     }
 
     // Display the registration form or password form
     public function render_registration_form() {
-        // Save the current page as registration page if needed
         $this->set_registration_page();
-
         $output = '';
 
         // Step 2: display password form if token present
         if ( isset($_GET['zombye_token']) ) {
-            $output .= $this->render_password_form(sanitize_text_field($_GET['zombye_token']));
+            $token = sanitize_text_field($_GET['zombye_token']);
+            $message = $this->get_password_message($token);
+            if ($message) {
+                $output .= self::notice($message, 'error');
+            }
+            $output .= $this->render_password_form($token);
             return $output;
         }
 
         // Step 1: handle email submission
         if ( isset($_POST['zombye_email']) ) {
-            $output .= $this->handle_form_submission($_POST['zombye_email']);
+            $email = sanitize_email($_POST['zombye_email']);
+            $message = $this->handle_form_submission($email);
+            if ($message) {
+                $output .= self::notice($message, 'error');
+            } else {
+                $output .= self::notice(__('A confirmation email has been sent. Please check your inbox!', 'zombye'), 'success');
+            }
             return $output; // replace shortcode with message
         }
 
         // Default email registration form
         $output .= '
         <form method="POST">
-            <label>Email: <input type="email" name="zombye_email" required></label>
-            <button type="submit">Register</button>
+            <label>' . esc_html__('Email:', 'zombye') . ' <input type="email" name="zombye_email" required></label>
+            <button type="submit">' . esc_html__('Register', 'zombye') . '</button>
         </form>';
 
         return $output;
@@ -48,63 +69,57 @@ class Zombye {
     // Handle email submission (step 1)
     private function handle_form_submission($email) {
         if (!is_email($email) || email_exists($email)) {
-            // Generic error message to prevent revealing valid emails
-            return '<p>There was a problem processing your registration. Please try again later.</p>';
+            // generic message for all errors
+            return __('There was a problem processing your registration. Please try again.', 'zombye');
         }
 
         $token = wp_generate_password(20, false);
         set_transient('zombye_' . $token, $email, 12 * HOUR_IN_SECONDS);
 
-        // Dynamic link to the current page (shortcode)
         $page_url = get_permalink();
         $link = add_query_arg(['zombye_token' => $token], $page_url);
 
-        $subject = "Confirm your registration";
-        $message = "Click this link to validate your account and choose your password:\n\n$link";
+        $subject = __('Confirm your registration', 'zombye');
+        $message = sprintf(__('Click this link to validate your account and choose your password: %s', 'zombye'), $link);
 
         wp_mail($email, $subject, $message);
 
-        return '<p>A confirmation email has been sent. Please check your inbox!</p>';
+        return ''; // no error
     }
 
     // Password form rendering (step 2)
     private function render_password_form($token) {
         $email = get_transient('zombye_' . $token);
-        if (!$email) return '<p>Invalid or expired token.</p>';
+        if (!$email) return '';
 
-        $output = '';
-
-        // If there was a mismatch error from previous submission
-        if (isset($_GET['zombye_error']) && $_GET['zombye_error'] === 'mismatch') {
-            $output .= '<p>Passwords do not match. Please try again.</p>';
-        }
-
-        // Password setup form with standard names
-        $output .= '
+        return '
         <form method="POST">
-            <label>Choose your password: <input type="password" name="password" required></label><br>
-            <label>Confirm password: <input type="password" name="password_confirmation" required></label><br>
-            <button type="submit">Set password</button>
+            <label>' . esc_html__('Choose your password:', 'zombye') . ' <input type="password" name="password" required></label><br>
+            <label>' . esc_html__('Confirm password:', 'zombye') . ' <input type="password" name="password_confirm" required></label><br>
+            <button type="submit">' . esc_html__('Set password', 'zombye') . '</button>
         </form>';
+    }
 
-        return $output;
+    // Provide message for password errors
+    private function get_password_message($token) {
+        if (!isset($_GET['zombye_error']) || $_GET['zombye_error'] !== 'mismatch') {
+            return '';
+        }
+        return __('Passwords do not match. Please try again.', 'zombye');
     }
 
     // Handle password submission early to allow redirect
     public function maybe_handle_password_submit() {
-        if (!isset($_GET['zombye_token'], $_POST['password'], $_POST['password_confirmation'])) {
-            return;
-        }
+        if (!isset($_GET['zombye_token'], $_POST['password'], $_POST['password_confirm'])) return;
 
         $token = sanitize_text_field($_GET['zombye_token']);
         $email = get_transient('zombye_' . $token);
         if (!$email) return;
 
         $password = $_POST['password'];
-        $password_confirm = $_POST['password_confirmation'];
+        $password_confirm = $_POST['password_confirm'];
 
         if ($password !== $password_confirm) {
-            // Redirect back to the same page with error query
             $redirect_url = add_query_arg('zombye_error', 'mismatch', get_permalink());
             $redirect_url = add_query_arg('zombye_token', $token, $redirect_url);
             wp_redirect($redirect_url);
@@ -113,17 +128,15 @@ class Zombye {
 
         $user_id = wp_create_user($email, $password, $email);
         if (is_wp_error($user_id)) {
-            wp_die('Error creating account.');
+            wp_die(__('Error creating account.', 'zombye'));
         }
 
         delete_transient('zombye_' . $token);
 
-        // Auto-login
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
         do_action('wp_login', $email, get_user_by('id', $user_id));
 
-        // Redirect to profile (w4os aware)
         $profile_url = function_exists('w4os_get_user_profile_url')
             ? w4os_get_user_profile_url($user_id)
             : get_edit_user_link($user_id);
@@ -137,10 +150,7 @@ class Zombye {
         $current_page_id = get_the_ID();
         if (!$current_page_id) return;
 
-        // Retrieve all zombye options
         $opts = get_option('zombye', []);
-
-        // If the registration page exists and still contains the shortcode, do nothing
         if (!empty($opts['registration_page'])) {
             $stored_content = get_post_field('post_content', $opts['registration_page']);
             if ($stored_content && has_shortcode($stored_content, 'zombye_register')) {
@@ -148,7 +158,6 @@ class Zombye {
             }
         }
 
-        // Save current page in zombye options array
         $opts['registration_page'] = $current_page_id;
         update_option('zombye', $opts);
     }
@@ -163,5 +172,11 @@ class Zombye {
 
         wp_redirect(get_permalink($opts['registration_page']));
         exit;
+    }
+
+    // Static method to display notice messages
+    public static function notice($message, $type = 'error') {
+        $class = $type === 'success' ? 'notice notice-success' : 'notice notice-error';
+        return sprintf('<div class="%s">%s</div>', esc_attr($class), esc_html($message));
     }
 }

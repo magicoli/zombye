@@ -82,10 +82,26 @@ class Zombye {
         $page_url = get_permalink();
         $link = add_query_arg(['zombye_token' => $token], $page_url);
 
-        $subject = __('Confirm your registration', 'zombye');
-        $message = sprintf(__('Click this link to validate your account and choose your password: %s', 'zombye'), $link);
+        $subject = sprintf(
+        	__('Confirm your registration to %s', 'zombye'), get_bloginfo('name')
+        );
+        $message = sprintf(
+	        '<h2>%1$s</h2>
+	        <p>%2$s</p>
+	        <p><a href="%3$s">%3$s</a></p>
+	        <p>%4$s</p>
+			<hr>
+			<p>%5$s<br><a class="smaller" href="%6$s">%6$s</a></p>',
+	        __('Thank you for registering!', 'zombye'),
+	        __('Click this link to validate your account and set your password:', 'zombye'),
+	        $link,
+	        __('If you did not request this, please ignore this email.', 'zombye'),
+			get_bloginfo('name'),
+			get_bloginfo('url'),
+        );
+        $headers = array('Content-Type: text/html; charset=UTF-8');
 
-        wp_mail($email, $subject, $message);
+        wp_mail($email, $subject, $message, $headers);
 
         return ''; // no error
     }

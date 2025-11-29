@@ -17,7 +17,7 @@ class Zombye {
 
         // Enqueue frontend styles
         add_action('wp_enqueue_scripts', [$this, 'enqueue_styles']);
-    }
+	}
 
     public function enqueue_styles() {
         wp_enqueue_style(
@@ -144,9 +144,13 @@ class Zombye {
         wp_set_auth_cookie($user_id);
         do_action('wp_login', $email, get_user_by('id', $user_id));
 
-        $profile_url = function_exists('w4os_get_user_profile_url')
-            ? w4os_get_user_profile_url($user_id)
-            : get_edit_user_link($user_id);
+        if ( function_exists('w4os_web_profile_url') ) {
+            $profile_url = w4os_web_profile_url($user_id);
+            error_log('[DEBUG] using w4os_web_profile_url ' . $profile_url);
+        } else {
+            $profile_url = get_edit_profile_url($user_id);
+            error_log('[DEBUG] using get_edit_profile_url ' . $profile_url);
+        }
 
         wp_redirect($profile_url);
         exit;
